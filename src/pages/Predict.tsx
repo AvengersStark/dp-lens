@@ -4,7 +4,7 @@
 // try, one of them a cell where taking the item wins.
 
 import type { VNode } from 'preact';
-import { useEffect, useMemo, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { DesignNote } from '../components/DesignNote';
 import { DPArray, type ArcArrow } from '../components/DPArray';
 import { EffortRating } from '../components/EffortRating';
@@ -79,6 +79,13 @@ export function Predict({ view }: { view: ViewKind }) {
   const last3 = history.slice(-3);
   const next = nextStep(stepId);
 
+  // The mastery message sits above the table, out of view of the Check button that earns
+  // it, so bring it into view when it appears.
+  const masteryBox = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (mastered) masteryBox.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [mastered]);
+
   return (
     <div class="page">
       <PageHead kicker={`${view === '2d' ? '0/1 knapsack · table' : '0/1 knapsack · one array'} · Predict`} title={view === '2d' ? 'Predict cells' : 'Predict in one array'}>
@@ -94,11 +101,13 @@ export function Predict({ view }: { view: ViewKind }) {
 
 
       {mastered && view === '2d' && (
-        <Callout tone="good" title={next ? 'Mastery reached. The next step is unlocked.' : 'Mastery reached.'}>
-          <p>You can keep practicing on new tables, or move on.</p>
-          <EffortRating step={stepId} />
-          <NextLink next={next} />
-        </Callout>
+        <div ref={masteryBox}>
+          <Callout tone="good" title={next ? 'Mastery reached. The next step is unlocked.' : 'Mastery reached.'}>
+            <p>You can keep practicing on new tables, or move on.</p>
+            <EffortRating step={stepId} />
+            <NextLink next={next} />
+          </Callout>
+        </div>
       )}
 
       {view === '1d' && (mastered || alreadyDone) && (
