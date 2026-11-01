@@ -134,6 +134,12 @@ describe('Write checking', () => {
     expect(r.first!.chain.length).toBeGreaterThan(0);
   });
 
+  it('blames the current-row read, not the order, when a right-to-left row hits an empty cell', () => {
+    const r = checkWrite(zo2d, spec('if j >= w[i] then max(dp[i-1][j], dp[i][j-w[i]] + v[i]) else dp[i-1][j]', 2, { ...order2, jDir: 'down' }), instances);
+    expect(r.first?.diag.code).toBe('CURRENT_ROW');
+    expect(r.first?.diag.slot).toBe('transition');
+  });
+
   it('reports a missing guard as a negative capacity', () => {
     const r = checkWrite(zo2d, spec('max(dp[i-1][j], dp[i-1][j-w[i]] + v[i])', 2, order2), instances);
     expect(r.first?.diag.code).toBe('NEG_CAPACITY');
@@ -199,6 +205,8 @@ describe('Build cards', () => {
     expect(verdict({ ...good, base: 'b-exact' })).toBe('base:BASE_MISFIT');
     expect(verdict({ ...good, base: 'b-col0' })).toBe('base:UNSET_BASE');
     expect(verdict({ ...good, transition: 't-cur' })).toBe('transition:CURRENT_ROW');
+    // The video script's card: current-row transition with a right-to-left order.
+    expect(verdict({ ...good, transition: 't-cur', order: 'o-iup-jdown' })).toBe('transition:CURRENT_ROW');
     expect(verdict({ ...good, transition: 't-noguard' })).toBe('transition:NEG_CAPACITY');
     expect(verdict({ ...good, transition: 't-greedy' })).toBe('transition:GREEDY_RATIO');
     expect(verdict({ ...good, order: 'o-idown' })).toBe('order:READ_BEFORE_WRITE');

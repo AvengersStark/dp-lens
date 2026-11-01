@@ -124,8 +124,9 @@ export function markDone(id: StepId): void {
   if (!state.done[id]) setState({ done: { ...state.done, [id]: true } });
 }
 
+/** Clears progress only; the nickname, theme and reviewer pass are viewing settings and stay. */
 export function resetProgress(): void {
-  setState({ ...fresh(), nickname: state.nickname, theme: state.theme });
+  setState({ ...fresh(), nickname: state.nickname, theme: state.theme, reviewer: state.reviewer });
 }
 
 export function useAppState(): AppState {

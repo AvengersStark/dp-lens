@@ -334,6 +334,15 @@ export function diagnoseError(r: Run): Diagnosis {
     return { slot: 'transition', code: 'INDEX_RANGE', message: `While computing ${here}: ${e.message}` };
   }
   if (e.kind === 'unset' && e.read) {
+    if (dims === 2 && r.kind === 'zeroOne' && e.read[0] === e.pass && e.pass > 0) {
+      // Reading the current row is the real mistake in a 0/1 table, whatever the loop order:
+      // in this order the cell is empty, in another it would already contain item i.
+      return {
+        slot: 'transition',
+        code: 'CURRENT_ROW',
+        message: `${here} reads dp[${e.read[0]}][${e.read[1]}] in its own row. In this loop order that cell is still empty; in another order it could already contain item ${e.pass}, so item ${e.pass} would be counted twice. Read row i − 1 instead.`,
+      };
+    }
     const inBase = dims === 2 ? e.read[0] === 0 : true;
     if (inBase && dims === 2) {
       return { slot: 'base', code: 'UNSET_BASE', message: `While computing ${here}: ${e.message} Row 0 has to be set by the base case.` };
