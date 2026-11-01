@@ -1,6 +1,7 @@
 import type { ComponentChildren } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { downloadLog } from './lib/log';
+import { PAGE_OPENS_IN, STAGE, opensIn, pageReleased, stageLabel } from './lib/stage';
 import { type StepId, STEPS, isUnlocked, setState, useAppState } from './lib/store';
 import { Build } from './pages/Build';
 import { ExplainCard } from './pages/ExplainCard';
@@ -13,7 +14,7 @@ import { UnitCheck } from './pages/UnitCheck';
 import { Watch } from './pages/Watch';
 import { Write } from './pages/Write';
 
-const ROUTES: Record<string, { step?: StepId; view: () => ComponentChildren }> = {
+const ROUTES: Record<string, { step?: StepId; page?: keyof typeof PAGE_OPENS_IN; view: () => ComponentChildren }> = {
   '#/': { view: () => <Home /> },
   '#/check/pre': { step: 'pre', view: () => <UnitCheck phase="pre" /> },
   '#/watch': { step: 'p1-watch', view: () => <Watch /> },
@@ -27,8 +28,8 @@ const ROUTES: Record<string, { step?: StepId; view: () => ComponentChildren }> =
   '#/write/complete': { step: 'p3-write', view: () => <Write id="complete" /> },
   '#/reflect': { step: 'reflect', view: () => <Reflect /> },
   '#/check/post': { step: 'post', view: () => <UnitCheck phase="post" /> },
-  '#/lesson': { view: () => <LessonPlan /> },
-  '#/teacher': { view: () => <Teacher /> },
+  '#/lesson': { page: 'lesson', view: () => <LessonPlan /> },
+  '#/teacher': { page: 'teacher', view: () => <Teacher /> },
 };
 
 function useHash(): string {
@@ -44,8 +45,21 @@ function useHash(): string {
   return hash;
 }
 
+function NotYet({ milestone }: { milestone: number }) {
+  return (
+    <div class="page narrow">
+      <h1>This part opens in Milestone {milestone}</h1>
+      <p>This is the {stageLabel()} of DP Lens. The unit is released in stages, following the project plan.</p>
+      <a class="btn btn-primary" href="#/">
+        Back to the unit path
+      </a>
+    </div>
+  );
+}
+
 function Gate({ step, children }: { step: StepId; children: ComponentChildren }) {
   const app = useAppState();
+  if (opensIn(step) > STAGE) return <NotYet milestone={opensIn(step)} />;
   if (!app.nickname) {
     return (
       <div class="page narrow">
@@ -115,12 +129,16 @@ export function App() {
           <a href="#/" aria-current={hash === '#/' ? 'page' : undefined}>
             Unit path
           </a>
-          <a href="#/lesson" aria-current={hash === '#/lesson' ? 'page' : undefined}>
-            Lesson plan
-          </a>
-          <a href="#/teacher" aria-current={hash === '#/teacher' ? 'page' : undefined}>
-            Teacher view
-          </a>
+          {pageReleased('lesson') && (
+            <a href="#/lesson" aria-current={hash === '#/lesson' ? 'page' : undefined}>
+              Lesson plan
+            </a>
+          )}
+          {pageReleased('teacher') && (
+            <a href="#/teacher" aria-current={hash === '#/teacher' ? 'page' : undefined}>
+              Teacher view
+            </a>
+          )}
         </nav>
         <div class="topbar-right">
           {app.nickname && <span class="nick">{app.nickname}</span>}
@@ -132,9 +150,17 @@ export function App() {
           </button>
         </div>
       </header>
-      <main id="main">{route.step ? <Gate step={route.step}>{route.view()}</Gate> : route.view()}</main>
+      <main id="main">
+        {route.page && !pageReleased(route.page) ? (
+          <NotYet milestone={PAGE_OPENS_IN[route.page]} />
+        ) : route.step ? (
+          <Gate step={route.step}>{route.view()}</Gate>
+        ) : (
+          route.view()
+        )}
+      </main>
       <footer class="footer">
-        <span>DP Lens · a CS6460 prototype · knapsack unit</span>
+        <span>DP Lens · a CS6460 prototype · knapsack unit · {stageLabel()}</span>
         <span>No account, no tracking: your data stays in this browser until you export it.</span>
       </footer>
     </>

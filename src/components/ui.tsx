@@ -1,5 +1,6 @@
 import type { ComponentChildren } from 'preact';
 import { GLOSSARY, type TermKey } from '../lib/glossary';
+import type { StepInfo } from '../lib/store';
 
 /** Text with `code` spans written in backticks. */
 export function Rich({ text }: { text: string }) {
@@ -38,6 +39,22 @@ export function Callout({ tone, title, children }: { tone: FeedbackTone; title?:
         {children}
       </div>
     </div>
+  );
+}
+
+/** The link to the next released step, or a note that this version ends here. */
+export function NextLink({ next }: { next: StepInfo | null }) {
+  if (!next) {
+    return (
+      <p class="small">
+        This is the last step in this version of DP Lens. <a href="#/">Back to the unit path</a>
+      </p>
+    );
+  }
+  return (
+    <a class="btn btn-primary" href={next.route}>
+      Next: {next.title} →
+    </a>
   );
 }
 

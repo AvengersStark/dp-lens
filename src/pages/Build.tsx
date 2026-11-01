@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { DesignNote } from '../components/DesignNote';
 import { EffortRating } from '../components/EffortRating';
 import { FailureView } from '../components/FailureView';
-import { Callout, PageHead, Rich, Term } from '../components/ui';
+import { Callout, NextLink, PageHead, Rich, Term } from '../components/ui';
 import { BUILD_INSTANCES, BUILD_PROBLEMS, type Block, type BuildProblem, type CardResult, type Placement, blockById, evaluateCard } from '../lib/build';
 import { CODES, SLOTS, SLOT_LABEL, SLOT_QUESTION, type Slot } from '../lib/codes';
 import { logEvent } from '../lib/log';
@@ -94,7 +94,7 @@ export function Build({ id }: { id: BuildProblem['id'] }) {
   const badSlot = result?.status === 'checked' ? result.badSlot : null;
   const misplaced = new Set(result?.status === 'misplaced' ? result.verdicts.map((v) => v.slot) : []);
   const success = result?.status === 'checked' && !result.verdict;
-  const next = nextStep(stepId)!;
+  const next = nextStep(stepId);
 
   return (
     <div class="page">
@@ -231,9 +231,7 @@ export function Build({ id }: { id: BuildProblem['id'] }) {
                 <p key={n}>{n}</p>
               ))}
               <EffortRating step={stepId} />
-              <a class="btn btn-primary" href={next.route}>
-                Next: {next.title} →
-              </a>
+              <NextLink next={next} />
             </Callout>
           )}
         </section>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'preact/hooks';
 import { hashString } from './rng';
+import { STAGE, isReleased } from './stage';
 
 export type StepId =
   | 'pre'
@@ -141,15 +142,21 @@ export function useAppState(): AppState {
   return state;
 }
 
-export function isUnlocked(s: AppState, id: StepId): boolean {
+/**
+ * A step opens when it is released in this version and every released step before it
+ * is done. Reviewers skip the second condition, never the first.
+ */
+export function isUnlocked(s: AppState, id: StepId, stage = STAGE): boolean {
+  if (!isReleased(id, stage)) return false;
   if (s.reviewer) return true;
   const k = STEPS.findIndex((x) => x.id === id);
-  return k <= 0 || !!s.done[STEPS[k - 1].id];
+  return STEPS.slice(0, k).every((x) => !isReleased(x.id, stage) || !!s.done[x.id]);
 }
 
-export function nextStep(id: StepId): StepInfo | null {
+/** The next step that is released in this version, if any. */
+export function nextStep(id: StepId, stage = STAGE): StepInfo | null {
   const k = STEPS.findIndex((x) => x.id === id);
-  return STEPS[k + 1] ?? null;
+  return STEPS.slice(k + 1).find((x) => isReleased(x.id, stage)) ?? null;
 }
 
 /** Pretest and posttest use opposite forms, counterbalanced by nickname. */

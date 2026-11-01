@@ -669,6 +669,20 @@ textarea {
   border-style: dashed;
 }
 
+.step.upcoming {
+  background: transparent;
+  border-style: dashed;
+}
+
+.step.upcoming .step-title,
+.step.upcoming .step-body {
+  color: var(--muted);
+}
+
+.upcoming-badge {
+  white-space: nowrap;
+}
+
 .step-body {
   flex: 1;
   min-width: 0;

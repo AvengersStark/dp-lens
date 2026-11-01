@@ -35,6 +35,21 @@ For a recording or a review, a fresh browser window works best. Use **Reset my p
 the bottom of the start page to start over. Reviewers can turn on the **reviewer pass**
 on the start page to open every step without the mastery gates.
 
+## Release stages
+
+The unit is released in stages that follow the project timeline. `STAGE` in
+`src/lib/stage.ts` sets which steps this version opens; the others show
+"Opens in Milestone N" on the unit path and cannot be entered.
+
+| Stage | Opens |
+|---|---|
+| 1 (Milestone 1) | Watch, Predict (table) |
+| 2 (Milestone 2) | + Predict (one array), Build, Explain, Write (table and one array), Reflect, Lesson plan |
+| 3 (Milestone 3) | + Complete knapsack (Build, Write), Unit Check pretest and posttest, Teacher view |
+| 4 (final) | everything |
+
+`VITE_STAGE=4 npm run dev` opens everything locally without changing the default.
+
 ## Deploy to GitHub Pages
 
 The build is static and uses relative paths, so it works under any repository name.

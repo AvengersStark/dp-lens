@@ -5,7 +5,17 @@ import { useState } from 'preact/hooks';
 import { DesignNote } from '../components/DesignNote';
 import { Badge, Callout } from '../components/ui';
 import { clearLog, logEvent } from '../lib/log';
-import { PHASES, STEPS, SUPPORT, isUnlocked, resetProgress, setState, useAppState } from '../lib/store';
+import { STAGE, isReleased, opensIn, pageReleased, stageLabel } from '../lib/stage';
+import { PHASES, STEPS, SUPPORT, type StepId, isUnlocked, resetProgress, setState, useAppState } from '../lib/store';
+
+const TOUR: { href: string; label: string; text: string; step?: StepId; page?: 'lesson' | 'teacher' }[] = [
+  { href: '#/watch', label: 'Watch', text: 'press Play; answer one question wrong on purpose.', step: 'p1-watch' },
+  { href: '#/predict/table', label: 'Predict cells', text: 'make a mistake on purpose, then ask for hints.', step: 'p1-predict' },
+  { href: '#/build/table', label: 'Build the spec card', text: 'put in a trap block and run the card.', step: 'p1-build' },
+  { href: '#/write/array', label: 'Write the one-array version', text: 'try “j from w[i] up to W” first.', step: 'p2-write' },
+  { href: '#/teacher', label: 'Teacher view', text: 'load the demo data.', page: 'teacher' },
+  { href: '#/lesson', label: 'Lesson plan', text: 'how the steps fit into the live class.', page: 'lesson' },
+];
 
 const FADING: { mode: 'Watch' | 'Predict' | 'Build' | 'Write'; what: string; engagement: string }[] = [
   { mode: 'Watch', what: 'You study a solved table, step by step.', engagement: 'viewing, self-explaining' },
@@ -58,7 +68,9 @@ export function Home() {
     logEvent('session_start', 'home', { nickname: nick, userAgent: navigator.userAgent });
   };
 
-  const doneCount = STEPS.filter((s) => app.done[s.id]).length;
+  const released = STEPS.filter((s) => isReleased(s.id));
+  const doneCount = released.filter((s) => app.done[s.id]).length;
+  const tour = TOUR.filter((t) => (t.step ? isReleased(t.step) : pageReleased(t.page!)));
 
   return (
     <div class="page">
@@ -88,38 +100,26 @@ export function Home() {
           <div class="path-head">
             <h2>Unit path</h2>
             <span class="muted">
-              {doneCount} of {STEPS.length} steps done
+              {doneCount} of {released.length} steps done
+              {STAGE < 4 && ` · ${stageLabel()}: ${STEPS.length - released.length} more steps open at later milestones`}
             </span>
           </div>
 
           <Callout tone="info" title="Reviewing for CS6460?">
-            <p>The unit gates each step behind the one before it (for example, Predict opens the next step only after three cells in a row are right on the first try). Turn on the reviewer pass to open every step at once and to show a short design note on each page.</p>
+            <p>The unit gates each step behind the one before it (for example, Predict opens the next step only after three cells in a row are right on the first try). Turn on the reviewer pass to open every step in this version at once and to show a short design note on each page.</p>
             <label class="switch">
               <input type="checkbox" checked={app.reviewer} onChange={(e) => setState({ reviewer: (e.target as HTMLInputElement).checked })} />
               <span>Reviewer pass: unlock every step</span>
             </label>
             {app.reviewer && (
               <div class="tour">
-                <div class="kicker">A 15-minute tour</div>
+                <div class="kicker">{tour.length > 3 ? 'A 15-minute tour' : 'A short tour'}</div>
                 <ol>
-                  <li>
-                    <a href="#/watch">Watch</a>: press Play; answer one question wrong on purpose.
-                  </li>
-                  <li>
-                    <a href="#/predict/table">Predict cells</a>: make a mistake on purpose, then ask for hints.
-                  </li>
-                  <li>
-                    <a href="#/build/table">Build the spec card</a>: put in a trap block and run the card.
-                  </li>
-                  <li>
-                    <a href="#/write/array">Write the one-array version</a>: try “j from w[i] up to W” first.
-                  </li>
-                  <li>
-                    <a href="#/teacher">Teacher view</a>: load the demo data.
-                  </li>
-                  <li>
-                    <a href="#/lesson">Lesson plan</a>: how the steps fit into the live class.
-                  </li>
+                  {tour.map((t) => (
+                    <li key={t.href}>
+                      <a href={t.href}>{t.label}</a>: {t.text}
+                    </li>
+                  ))}
                 </ol>
               </div>
             )}
@@ -150,12 +150,14 @@ export function Home() {
               <ol class="path">
                 {STEPS.filter((s) => s.phase === ph.id).map((s) => {
                   const k = STEPS.indexOf(s) + 1;
+                  const upcoming = !isReleased(s.id);
                   const open = isUnlocked(app, s.id);
                   const done = !!app.done[s.id];
+                  const blocker = STEPS.slice(0, k - 1).findIndex((x) => isReleased(x.id) && !app.done[x.id]) + 1;
                   return (
                     <Fragment key={s.id}>
-                    {s.id === 'reflect' && <FruitFeast />}
-                    <li class={`step${done ? ' done' : ''}${open ? '' : ' locked'}`}>
+                    {s.id === 'reflect' && pageReleased('fruitFeast') && <FruitFeast />}
+                    <li class={`step${done ? ' done' : ''}${upcoming ? ' upcoming' : open ? '' : ' locked'}`}>
                       <span class="step-n" aria-hidden="true">
                         {done ? '✓' : k}
                       </span>
@@ -169,13 +171,15 @@ export function Home() {
                         <div class="step-title">{s.title}</div>
                         <div class="small muted">{s.blurb}</div>
                       </div>
-                      {open ? (
+                      {upcoming ? (
+                        <span class="badge upcoming-badge">Opens in Milestone {opensIn(s.id)}</span>
+                      ) : open ? (
                         <a class={`btn${done ? '' : ' btn-primary'}`} href={s.route}>
                           {done ? 'Review' : 'Start'}
                           <span class="sr-only"> {s.title}</span>
                         </a>
                       ) : (
-                        <span class="locked-note small">Locked: finish step {k - 1} first</span>
+                        <span class="locked-note small">Locked: finish step {blocker} first</span>
                       )}
                     </li>
                     </Fragment>

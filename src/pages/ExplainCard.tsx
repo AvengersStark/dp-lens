@@ -3,7 +3,7 @@
 
 import { useState } from 'preact/hooks';
 import { DesignNote } from '../components/DesignNote';
-import { Callout, PageHead, Rich } from '../components/ui';
+import { Callout, NextLink, PageHead, Rich } from '../components/ui';
 import { SLOTS, SLOT_LABEL, SLOT_QUESTION, type Slot } from '../lib/codes';
 import { SPEC_TEXT } from '../lib/content';
 import { logEvent } from '../lib/log';
@@ -34,7 +34,7 @@ export function ExplainCard() {
   const [saved, setSaved] = useState(false);
   const ready = SLOTS.every((s) => words(text[s]) >= 3);
   const rated = SLOTS.every((s) => rating[s]);
-  const next = nextStep('p1-explain')!;
+  const next = nextStep('p1-explain');
 
   const save = () => {
     logEvent('articulate', 'p1-explain', { text, rating });
@@ -112,9 +112,7 @@ export function ExplainCard() {
       {saved && (
         <Callout tone="good" title="Saved.">
           <p>Slots you rated “partly” or “missed” are good ones to watch in Write after class.</p>
-          <a class="btn btn-primary" href={next.route}>
-            Next: {next.title} →
-          </a>
+          <NextLink next={next} />
         </Callout>
       )}
     </div>

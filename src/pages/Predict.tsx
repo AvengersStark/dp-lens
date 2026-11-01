@@ -11,7 +11,7 @@ import { EffortRating } from '../components/EffortRating';
 import { DPTable, type Arrow, type Tone } from '../components/DPTable';
 import { QuestionCard } from '../components/QuestionCard';
 import { ItemList, SpecCard } from '../components/SpecCard';
-import { Callout, PageHead, Rich, Term } from '../components/ui';
+import { Callout, NextLink, PageHead, Rich, Term } from '../components/ui';
 import {
   type Attempt,
   FORWARD_QUESTION,
@@ -77,7 +77,7 @@ export function Predict({ view }: { view: ViewKind }) {
   };
 
   const last3 = history.slice(-3);
-  const next = nextStep(stepId)!;
+  const next = nextStep(stepId);
 
   return (
     <div class="page">
@@ -94,12 +94,10 @@ export function Predict({ view }: { view: ViewKind }) {
 
 
       {mastered && view === '2d' && (
-        <Callout tone="good" title="Mastery reached. The next step is unlocked.">
+        <Callout tone="good" title={next ? 'Mastery reached. The next step is unlocked.' : 'Mastery reached.'}>
           <p>You can keep practicing on new tables, or move on.</p>
           <EffortRating step={stepId} />
-          <a class="btn btn-primary" href={next.route}>
-            Next: {next.title} →
-          </a>
+          <NextLink next={next} />
         </Callout>
       )}
 
@@ -116,9 +114,7 @@ export function Predict({ view }: { view: ViewKind }) {
       {view === '1d' && (experimentDone || alreadyDone) && (
         <Callout tone="good" title="Step complete.">
           <EffortRating step={stepId} />
-          <a class="btn btn-primary" href={next.route}>
-            Next: {next.title} →
-          </a>
+          <NextLink next={next} />
         </Callout>
       )}
 
