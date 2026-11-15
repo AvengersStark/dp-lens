@@ -9,7 +9,7 @@ import { FailureView } from '../components/FailureView';
 import { SpecCard } from '../components/SpecCard';
 import { Callout, PageHead, Rich } from '../components/ui';
 import { type CheckResult, type WriteProblem, checkWrite } from '../lib/check';
-import { type Code, SLOT_LABEL } from '../lib/codes';
+import { CODES, type Code, SLOT_LABEL } from '../lib/codes';
 import { SPEC_TEXT } from '../lib/content';
 import { checkInstances } from '../lib/knapsack';
 import { logEvent } from '../lib/log';
@@ -97,6 +97,7 @@ export function Write({ id }: { id: WriteId }) {
   const [order1, setOrder1] = useState<string>('');
   const [result, setResult] = useState<CheckResult | null>(null);
   const [runs, setRuns] = useState(0);
+  const [attempts, setAttempts] = useState<{ run: number; formula: string; order: string; passed: number; total: number; feedback: string }[]>([]);
   const [hint, setHint] = useState<0 | 1 | 2 | 3>(0);
   const input = useRef<HTMLTextAreaElement>(null);
   const resultRef = useRef<HTMLElement>(null);
@@ -122,6 +123,7 @@ export function Write({ id }: { id: WriteId }) {
     const end = el ? el.selectionEnd ?? at : at;
     const next = src.slice(0, at) + tok + src.slice(end);
     setSrc(next);
+    setResult(null);
     requestAnimationFrame(() => {
       el?.focus();
       el?.setSelectionRange(at + tok.length, at + tok.length);
@@ -136,6 +138,13 @@ export function Write({ id }: { id: WriteId }) {
     setRuns((x) => x + 1);
     setHint(0);
     const pass = !r.first;
+    const orderLabel = order.dims === 1
+      ? ORDER_1D.find((o) => o.key === order1)!.label
+      : `${order.outer} outer; i ${order.iDir}; j ${order.jDir}`;
+    setAttempts((previous) => [...previous.slice(-4), {
+      run: runs + 1, formula: src, order: orderLabel, passed: r.passed, total: r.total,
+      feedback: r.first ? `${SLOT_LABEL[r.first.diag.slot]}: ${CODES[r.first.diag.code].label}` : 'All checked cells match.',
+    }]);
     logEvent(
       'write_run',
       c.step,
@@ -279,6 +288,24 @@ export function Write({ id }: { id: WriteId }) {
           <span class="small muted">Runs so far: {runs}</span>
         </div>
       </div>
+
+      {attempts.length > 0 && (
+        <section class="card attempt-history" aria-label="Compare your attempts">
+          <h2 class="card-title">Compare your attempts</h2>
+          <p class="small muted">Last five runs on this page visit. What did you change, and why did it help? Passing these instances is evidence, not a proof for every input.</p>
+          <div class="svg-scroll">
+            <table class="data">
+              <thead><tr><th scope="col">Run</th><th scope="col">Your rule</th><th scope="col">Loop order</th><th scope="col">Result</th></tr></thead>
+              <tbody>{attempts.map((a) => (
+                <tr key={a.run}>
+                  <th scope="row">{a.run}</th><td><code>{a.formula}</code></td><td>{a.order}</td>
+                  <td>{a.passed}/{a.total} passed. {a.feedback}</td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       {result && (
         <section class="card result" aria-live="polite" ref={resultRef}>

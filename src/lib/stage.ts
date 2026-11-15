@@ -6,7 +6,7 @@
 
 import type { StepId } from './store';
 
-export const STAGE: number = Number(import.meta.env.VITE_STAGE) || 1;
+export const STAGE: number = Number(import.meta.env.VITE_STAGE) || 2;
 
 /** The first stage in which each step is open. */
 const OPENS_IN: Record<StepId, number> = {

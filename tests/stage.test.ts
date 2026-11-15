@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isReleased } from '../src/lib/stage';
+import { isReleased, pageReleased, STAGE } from '../src/lib/stage';
 import { type AppState, STEPS, isUnlocked, nextStep } from '../src/lib/store';
 
 const learner = (done: AppState['done'] = {}, reviewer = false): AppState => ({
@@ -15,6 +15,17 @@ const learner = (done: AppState['done'] = {}, reviewer = false): AppState => ({
 describe('staged releases', () => {
   it('Milestone 1 opens Watch and Predict only', () => {
     expect(STEPS.filter((s) => isReleased(s.id, 1)).map((s) => s.id)).toEqual(['p1-watch', 'p1-predict']);
+  });
+
+  it('defaults to M2 and releases its learning experience without M3 assessments', () => {
+    expect(STAGE).toBe(2);
+    expect(STEPS.filter((s) => isReleased(s.id, 2)).map((s) => s.id)).toEqual([
+      'p1-watch', 'p1-predict', 'p2-predict', 'p1-build', 'p1-explain', 'p1-write', 'p2-write', 'reflect',
+    ]);
+    expect(pageReleased('lesson', 2)).toBe(true);
+    expect(pageReleased('teacher', 2)).toBe(false);
+    expect(isUnlocked(learner({}, true), 'post', 2)).toBe(false);
+    expect(isUnlocked(learner({}, true), 'p3-write', 2)).toBe(false);
   });
 
   it('an unreleased step never blocks the steps after it', () => {

@@ -3,8 +3,10 @@
 
 import { DesignNote } from '../components/DesignNote';
 import { PageHead } from '../components/ui';
+import { STAGE } from '../lib/stage';
 
 interface Row {
+  opensIn?: number;
   time: string;
   activity: string;
   app?: { label: string; href: string };
@@ -18,6 +20,7 @@ const PHASES: { title: string; note: string; rows: Row[] }[] = [
     note: 'At home, about 30 minutes.',
     rows: [
       {
+        opensIn: 3,
         time: '20 min',
         activity: 'Unit Check pretest (form A or B)',
         app: { label: 'Pretest', href: '#/check/pre' },
@@ -28,7 +31,7 @@ const PHASES: { title: string; note: string; rows: Row[] }[] = [
         time: '10 min',
         activity: 'Watch the worked example and answer the six self-explanation questions',
         app: { label: 'Watch', href: '#/watch' },
-        teacher: 'Before class, merges the exported logs on the error board.',
+        teacher: 'Discusses exported logs with learners; the error board opens in Milestone 3.',
         alone: 'Press Play; answer at least one question wrong on purpose.',
       },
     ],
@@ -38,6 +41,7 @@ const PHASES: { title: string; note: string; rows: Row[] }[] = [
     note: 'Live 90-minute video class, small group.',
     rows: [
       {
+        opensIn: 3,
         time: '0–10',
         activity: 'Argue about the most-missed self-explanation answers',
         app: { label: 'Teacher view', href: '#/teacher' },
@@ -62,7 +66,7 @@ const PHASES: { title: string; note: string; rows: Row[] }[] = [
         time: '50–75',
         activity: 'Build the spec card alone',
         app: { label: 'Build', href: '#/build/table' },
-        teacher: 'Watches Build runs come in; joins students who are stuck.',
+        teacher: 'Asks learners to share their screen or export a log; joins students who are stuck. Logs are not streamed live.',
         alone: 'Put in at least one trap block on purpose and read where the card fails.',
       },
       {
@@ -76,11 +80,11 @@ const PHASES: { title: string; note: string; rows: Row[] }[] = [
   },
   {
     title: 'After class',
-    note: 'Homework, about 60 minutes.',
+    note: STAGE < 3 ? 'Milestone 2: about 50 minutes, including the optional contest problem.' : 'Homework, about 65 minutes.',
     rows: [
       {
-        time: '35 min',
-        activity: 'Write the table version, the one-array version, then Build and Write the complete knapsack',
+        time: STAGE < 3 ? '20 min' : '35 min',
+        activity: STAGE < 3 ? 'Write the table and one-array 0/1 versions. Complete knapsack opens in Milestone 3.' : 'Write the table version, the one-array version, then Build and Write the complete knapsack',
         app: { label: 'Write', href: '#/write/table' },
         teacher: 'Reads the Write runs that needed hint 3.',
         alone: 'In the one-array Write, try the forward loop first.',
@@ -105,6 +109,7 @@ const PHASES: { title: string; note: string; rows: Row[] }[] = [
     note: 'No feedback.',
     rows: [
       {
+        opensIn: 3,
         time: '20 min',
         activity: 'Unit Check posttest, the other form',
         app: { label: 'Posttest', href: '#/check/post' },
@@ -129,6 +134,14 @@ export function LessonPlan() {
         debate and articulation; construction happens after class. The last column says what to do if you go through the unit alone, as a reviewer.
       </PageHead>
       <DesignNote id="lesson" />
+      {STAGE === 2 && (
+        <section class="card">
+          <h2 class="card-title">Milestone 2: try the learning experience</h2>
+          <p>Before class: Watch. In class: Predict, Build, and Explain. After class: Write and Reflect.</p>
+          <p class="small">The full lesson below also shows the planned assessments. Pretest, posttest, complete knapsack, and Teacher view open in Milestone 3. For the first ten minutes of class now, discuss a learner’s Watch answer by screen sharing.</p>
+          <p class="small">Reviewing alone? Turn on the reviewer pass on the Unit path to visit the released activities in any order. Try a wrong rule, repair it, then explain what changed.</p>
+        </section>
+      )}
       {PHASES.map((ph) => (
         <section key={ph.title} class="card lesson-phase">
           <div class="phase-head">
@@ -151,7 +164,7 @@ export function LessonPlan() {
                   <tr key={r.activity}>
                     <td class="nowrap">{r.time}</td>
                     <td>{r.activity}</td>
-                    <td>{r.app ? <a href={r.app.href}>{r.app.label}</a> : <span class="muted">—</span>}</td>
+                    <td>{r.opensIn && r.opensIn > STAGE ? <span class="badge">Opens in Milestone {r.opensIn}</span> : r.app ? <a href={r.app.href}>{r.app.label}</a> : <span class="muted">—</span>}</td>
                     <td>{r.teacher}</td>
                     <td>{r.alone}</td>
                   </tr>

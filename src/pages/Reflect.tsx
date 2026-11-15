@@ -117,7 +117,7 @@ export function Reflect() {
       </section>
       {saved && (
         <Callout tone="good" title="Saved.">
-          <p>Your teacher sees which slot each learner picked on the error board.</p>
+          <p>Use Export log to share this reflection with your teacher. The error board opens in Milestone 3; nothing is sent automatically.</p>
           {next && (
             <a class="btn btn-primary" href={next.route}>
               Next: {next.title} →

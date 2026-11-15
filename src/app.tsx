@@ -154,7 +154,7 @@ export function App() {
         {route.page && !pageReleased(route.page) ? (
           <NotYet milestone={PAGE_OPENS_IN[route.page]} />
         ) : route.step ? (
-          <Gate step={route.step}>{route.view()}</Gate>
+          <Gate key={hash} step={route.step}>{route.view()}</Gate>
         ) : (
           route.view()
         )}

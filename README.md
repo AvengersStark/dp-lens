@@ -19,6 +19,22 @@ answer), and support fades across four modes:
 Plus a test mode (Unit Check, parallel forms A and B, no feedback) and a teacher
 page that merges exported logs into an error board.
 
+## Milestone 2 increment (November 15, 2026)
+
+The default release is now stage 2. Build, both 0/1 Write modes, one-array Predict,
+Explain, Reflect, and the lesson plan are open. These modes already had first
+implementations at Milestone 1; this release opens and refines them.
+
+- Write keeps the last five runs during a page visit, with the exact rule, loop
+  direction, pass count, and diagnosis, so learners can explain a revision.
+- Editing through the notation palette clears stale results, just like typing.
+- Switching routes resets mode-local state so table and array work cannot leak
+  into each other. Existing progress and exported logs remain in browser storage.
+- The lesson plan marks M3-only destinations, provides an M2 walkthrough, and
+  clarifies that teachers receive exported logs rather than a live stream.
+
+No beta-test results or learning gains are claimed for this release.
+
 ## Run it
 
 Needs Node.js 20 or newer.
